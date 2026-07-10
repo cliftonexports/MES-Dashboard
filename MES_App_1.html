@@ -1,0 +1,1588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>First Quality Knits — MES</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+/* =====================================================================================
+   SECTION: DESIGN TOKENS
+===================================================================================== */
+:root{
+  --navy-950:#0a1830;
+  --navy-900:#0f2544;
+  --navy-800:#15325c;
+  --navy-700:#1c4074;
+  --blue-600:#2f6fed;
+  --blue-500:#4a83ff;
+  --blue-100:#e8f0fe;
+  --surface:#ffffff;
+  --bg:#f2f5f9;
+  --bg-inset:#eaeef4;
+  --border:#dde3ec;
+  --border-strong:#c7d0dd;
+  --text:#101827;
+  --text-muted:#5b6779;
+  --text-faint:#8994a3;
+  --green-600:#177a4c;
+  --green-100:#e3f6ec;
+  --amber-600:#b06a00;
+  --amber-100:#fdf1dc;
+  --red-600:#c22e3a;
+  --red-100:#fce8ea;
+  --gray-100:#eef1f5;
+
+  --space-1:4px; --space-2:8px; --space-3:12px; --space-4:16px;
+  --space-5:20px; --space-6:24px; --space-8:32px;
+
+  --font-xs:11.5px; --font-sm:12.5px; --font-base:13.5px;
+  --font-md:15px; --font-lg:18px; --font-xl:22px; --font-2xl:28px;
+
+  --radius-sm:6px; --radius-md:10px; --radius-lg:14px;
+  --shadow-sm:0 1px 2px rgba(16,24,39,.06);
+  --shadow-md:0 4px 16px rgba(16,24,39,.08);
+  --shadow-lg:0 12px 32px rgba(16,24,39,.14);
+
+  --sidebar-width:236px;
+  --sidebar-collapsed-width:64px;
+  --topbar-height:56px;
+  --font-family-base:'Inter',system-ui,-apple-system,sans-serif;
+  --font-family-mono:'JetBrains Mono',monospace;
+}
+
+*,*::before,*::after{box-sizing:border-box;}
+html,body{height:100%;}
+body{
+  margin:0;font-family:var(--font-family-base);background:var(--bg);color:var(--text);
+  font-size:var(--font-base);-webkit-font-smoothing:antialiased;
+}
+button,input,select,textarea{font-family:inherit;font-size:inherit;color:inherit;}
+button{cursor:pointer;}
+a{color:inherit;}
+::-webkit-scrollbar{width:10px;height:10px;}
+::-webkit-scrollbar-thumb{background:var(--border-strong);border-radius:8px;}
+::-webkit-scrollbar-track{background:transparent;}
+:focus-visible{outline:2px solid var(--blue-500);outline-offset:1px;}
+
+/* =====================================================================================
+   SECTION: UTILITY CLASSES
+===================================================================================== */
+.hidden{display:none !important;}
+.flex{display:flex;}
+.flex-col{display:flex;flex-direction:column;}
+.items-center{align-items:center;}
+.justify-between{justify-content:space-between;}
+.gap-1{gap:var(--space-1);} .gap-2{gap:var(--space-2);} .gap-3{gap:var(--space-3);} .gap-4{gap:var(--space-4);}
+.w-full{width:100%;}
+.text-muted{color:var(--text-muted);}
+.text-faint{color:var(--text-faint);}
+.text-sm{font-size:var(--font-sm);}
+.text-xs{font-size:var(--font-xs);}
+.font-mono{font-family:var(--font-family-mono);}
+.font-semibold{font-weight:600;}
+.font-bold{font-weight:700;}
+.mt-1{margin-top:var(--space-1);} .mt-2{margin-top:var(--space-2);} .mt-3{margin-top:var(--space-3);} .mt-4{margin-top:var(--space-4);}
+.mb-2{margin-bottom:var(--space-2);} .mb-3{margin-bottom:var(--space-3);} .mb-4{margin-bottom:var(--space-4);}
+
+/* =====================================================================================
+   SECTION: LOGIN SCREEN
+===================================================================================== */
+#loginScreen{
+  position:fixed;inset:0;background:linear-gradient(160deg,var(--navy-950),var(--navy-800));
+  display:flex;align-items:center;justify-content:center;z-index:500;
+}
+.login-card{
+  width:380px;background:var(--surface);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);
+  padding:var(--space-8) var(--space-6) var(--space-6);
+}
+.login-brand{display:flex;align-items:center;gap:var(--space-3);margin-bottom:var(--space-6);}
+.login-brand .mark{width:40px;height:40px;border-radius:var(--radius-sm);background:var(--navy-900);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:var(--font-lg);}
+.login-brand .name{font-weight:800;font-size:var(--font-md);line-height:1.2;}
+.login-brand .sub{font-size:var(--font-xs);color:var(--text-muted);}
+.login-field{margin-bottom:var(--space-4);}
+.login-field label{display:block;font-size:var(--font-xs);font-weight:600;color:var(--text-muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em;}
+.login-field input{width:100%;padding:10px 12px;border:1px solid var(--border-strong);border-radius:var(--radius-sm);font-size:var(--font-base);}
+.login-field input:focus{border-color:var(--blue-500);}
+.login-error{background:var(--red-100);color:var(--red-600);padding:var(--space-2) var(--space-3);border-radius:var(--radius-sm);font-size:var(--font-sm);margin-bottom:var(--space-3);}
+.btn-login{width:100%;padding:11px;background:var(--navy-900);color:#fff;border:none;border-radius:var(--radius-sm);font-weight:600;font-size:var(--font-base);}
+.btn-login:hover{background:var(--navy-800);}
+.btn-login:disabled{opacity:.6;cursor:default;}
+
+/* =====================================================================================
+   SECTION: APP SHELL / LAYOUT
+===================================================================================== */
+#appShell{display:none;height:100vh;overflow:hidden;}
+#appShell.active{display:flex;}
+
+.sidebar{
+  width:var(--sidebar-width);flex-shrink:0;background:var(--navy-950);color:#dbe4f5;
+  display:flex;flex-direction:column;transition:width .18s ease;overflow:hidden;
+}
+.sidebar.collapsed{width:var(--sidebar-collapsed-width);}
+.sidebar-brand{
+  height:var(--topbar-height);display:flex;align-items:center;gap:var(--space-2);
+  padding:0 var(--space-4);border-bottom:1px solid rgba(255,255,255,.08);flex-shrink:0;
+}
+.sidebar-brand .mark{width:28px;height:28px;border-radius:6px;background:var(--blue-600);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;flex-shrink:0;}
+.sidebar-brand .label{font-weight:700;font-size:13px;white-space:nowrap;overflow:hidden;}
+.sidebar-nav{flex:1;overflow-y:auto;padding:var(--space-3) var(--space-2);}
+.nav-item{
+  display:flex;align-items:center;gap:12px;padding:9px 12px;border-radius:var(--radius-sm);
+  color:#a9b8d4;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;margin-bottom:2px;
+}
+.nav-item svg{flex-shrink:0;width:18px;height:18px;}
+.nav-item:hover{background:rgba(255,255,255,.06);color:#fff;}
+.nav-item.active{background:var(--blue-600);color:#fff;}
+.sidebar-collapse-btn{
+  border-top:1px solid rgba(255,255,255,.08);padding:var(--space-3);display:flex;align-items:center;gap:10px;
+  color:#8ba0c4;font-size:12px;flex-shrink:0;
+}
+.sidebar-collapse-btn:hover{color:#fff;}
+
+.main-area{flex:1;display:flex;flex-direction:column;min-width:0;}
+.topbar{
+  height:var(--topbar-height);background:var(--surface);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;padding:0 var(--space-5);flex-shrink:0;
+}
+.topbar-title{font-weight:700;font-size:var(--font-lg);}
+.topbar-right{display:flex;align-items:center;gap:var(--space-4);}
+.sync-indicator{display:flex;align-items:center;gap:6px;font-size:var(--font-xs);color:var(--text-muted);}
+.sync-dot{width:7px;height:7px;border-radius:50%;background:var(--green-600);}
+.topbar-btn{
+  display:flex;align-items:center;gap:6px;padding:7px 12px;border:1px solid var(--border-strong);
+  border-radius:var(--radius-sm);background:var(--surface);font-size:var(--font-sm);font-weight:600;color:var(--text);
+}
+.topbar-btn:hover{background:var(--bg-inset);}
+.topbar-btn.primary{background:var(--navy-900);color:#fff;border-color:var(--navy-900);}
+.topbar-btn.primary:hover{background:var(--navy-800);}
+.user-chip{display:flex;align-items:center;gap:8px;padding-left:var(--space-3);border-left:1px solid var(--border);}
+.user-chip .avatar{width:28px;height:28px;border-radius:50%;background:var(--blue-100);color:var(--blue-600);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;}
+.user-chip .role{font-size:var(--font-xs);color:var(--text-muted);}
+
+.content{flex:1;overflow-y:auto;padding:var(--space-5);}
+
+/* =====================================================================================
+   SECTION: KPI / STAT CARDS
+===================================================================================== */
+.kpi-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:var(--space-3);margin-bottom:var(--space-4);}
+.kpi-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);
+  padding:var(--space-4);position:relative;border-left:3px solid var(--border);
+}
+.kpi-card.rag-green{border-left-color:var(--green-600);}
+.kpi-card.rag-amber{border-left-color:var(--amber-600);}
+.kpi-card.rag-red{border-left-color:var(--red-600);}
+.kpi-label{font-size:var(--font-xs);font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:var(--blue-600);margin-bottom:8px;}
+.kpi-value{font-size:var(--font-xl);font-weight:800;line-height:1.1;}
+.kpi-sub{font-size:var(--font-xs);color:var(--text-muted);margin-top:4px;}
+.kpi-icon{position:absolute;top:var(--space-3);right:var(--space-3);width:30px;height:30px;border-radius:8px;background:var(--blue-100);display:flex;align-items:center;justify-content:center;color:var(--blue-600);}
+
+/* =====================================================================================
+   SECTION: STAT STRIP (smaller, module summary bars)
+===================================================================================== */
+.stat-strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:var(--space-3);margin-bottom:var(--space-4);}
+.stat-mini{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);padding:var(--space-3) var(--space-4);}
+.stat-mini .lbl{font-size:var(--font-xs);color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:.03em;}
+.stat-mini .val{font-size:var(--font-lg);font-weight:800;margin-top:4px;}
+
+/* =====================================================================================
+   SECTION: FILTER BAR
+===================================================================================== */
+.filter-bar{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);
+  padding:var(--space-3) var(--space-4);display:flex;flex-wrap:wrap;gap:var(--space-3);align-items:flex-end;margin-bottom:var(--space-4);
+}
+.filter-field{display:flex;flex-direction:column;gap:5px;min-width:140px;}
+.filter-field label{font-size:var(--font-xs);font-weight:600;color:var(--text-muted);}
+.filter-field select,.filter-field input{
+  padding:7px 10px;border:1px solid var(--border-strong);border-radius:var(--radius-sm);font-size:var(--font-sm);background:var(--surface);
+}
+.filter-field.search{flex:1;min-width:200px;}
+.filter-clear-btn{padding:8px 14px;border:1px solid var(--border-strong);border-radius:var(--radius-sm);background:var(--bg-inset);font-size:var(--font-sm);font-weight:600;}
+
+/* =====================================================================================
+   SECTION: PANEL / CARD CONTAINER
+===================================================================================== */
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);overflow:hidden;margin-bottom:var(--space-4);}
+.panel-header{
+  background:var(--navy-900);color:#fff;padding:10px var(--space-4);font-size:var(--font-sm);
+  font-weight:700;letter-spacing:.03em;text-transform:uppercase;display:flex;justify-content:space-between;align-items:center;
+}
+.panel-body{padding:0;}
+.panel-body.padded{padding:var(--space-4);}
+
+.summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-4);}
+@media (max-width: 1100px){ .summary-grid{grid-template-columns:1fr;} }
+
+/* =====================================================================================
+   SECTION: TABLE COMPONENT (generic, reused across every module)
+===================================================================================== */
+.table-scroll{overflow-x:auto;}
+table.data-table{width:100%;border-collapse:collapse;font-size:var(--font-sm);}
+table.data-table thead th{
+  position:sticky;top:0;background:var(--bg-inset);color:var(--text-muted);font-weight:700;text-align:left;
+  padding:9px 12px;border-bottom:1px solid var(--border);white-space:nowrap;font-size:var(--font-xs);text-transform:uppercase;letter-spacing:.02em;cursor:pointer;
+}
+table.data-table thead th.sortable:hover{color:var(--text);}
+table.data-table tbody td{padding:9px 12px;border-bottom:1px solid var(--border);white-space:nowrap;}
+table.data-table tbody tr:hover{background:var(--bg-inset);}
+table.data-table tfoot td{padding:9px 12px;font-weight:700;background:var(--bg-inset);border-top:2px solid var(--border-strong);}
+.cell-editable{background:#fffef2;}
+.cell-editable input,.cell-editable select{
+  width:100%;min-width:80px;padding:5px 7px;border:1px solid var(--border-strong);border-radius:5px;font-size:var(--font-sm);background:#fff;
+}
+.cell-editable input:focus{border-color:var(--blue-500);}
+.row-dirty td:first-child{box-shadow:inset 3px 0 0 var(--amber-600);}
+.row-saved td:first-child{box-shadow:inset 3px 0 0 var(--green-600);}
+.rag-text.green{color:var(--green-600);font-weight:700;}
+.rag-text.amber{color:var(--amber-600);font-weight:700;}
+.rag-text.red{color:var(--red-600);font-weight:700;}
+.rag-text.gray{color:var(--text-faint);}
+.pill{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:var(--font-xs);font-weight:700;}
+.pill.green{background:var(--green-100);color:var(--green-600);}
+.pill.amber{background:var(--amber-100);color:var(--amber-600);}
+.pill.red{background:var(--red-100);color:var(--red-600);}
+.pill.gray{background:var(--gray-100);color:var(--text-muted);}
+.row-actions{display:flex;gap:6px;}
+.icon-btn{
+  width:28px;height:28px;border-radius:6px;border:1px solid var(--border-strong);background:var(--surface);
+  display:flex;align-items:center;justify-content:center;color:var(--text-muted);
+}
+.icon-btn:hover{background:var(--bg-inset);color:var(--text);}
+.icon-btn.danger:hover{background:var(--red-100);color:var(--red-600);border-color:var(--red-600);}
+.table-toolbar{display:flex;justify-content:space-between;align-items:center;padding:var(--space-3) var(--space-4);border-bottom:1px solid var(--border);flex-wrap:wrap;gap:var(--space-2);}
+.table-empty{padding:var(--space-8);text-align:center;color:var(--text-muted);}
+.pagination{display:flex;align-items:center;justify-content:flex-end;gap:var(--space-2);padding:var(--space-3) var(--space-4);border-top:1px solid var(--border);}
+.pagination button{padding:5px 10px;border:1px solid var(--border-strong);border-radius:6px;background:var(--surface);font-size:var(--font-xs);font-weight:600;}
+.pagination button:disabled{opacity:.4;}
+.pagination .page-info{font-size:var(--font-xs);color:var(--text-muted);}
+
+/* =====================================================================================
+   SECTION: BUTTONS
+===================================================================================== */
+.btn{padding:8px 14px;border-radius:var(--radius-sm);font-weight:600;font-size:var(--font-sm);border:1px solid transparent;}
+.btn-primary{background:var(--blue-600);color:#fff;}
+.btn-primary:hover{background:#2359c9;}
+.btn-secondary{background:var(--surface);border-color:var(--border-strong);color:var(--text);}
+.btn-secondary:hover{background:var(--bg-inset);}
+.btn-success{background:var(--green-600);color:#fff;}
+.btn-danger{background:var(--red-600);color:#fff;}
+.btn:disabled{opacity:.5;cursor:default;}
+.btn-sm{padding:6px 10px;font-size:var(--font-xs);}
+
+/* =====================================================================================
+   SECTION: MODAL COMPONENT
+===================================================================================== */
+.modal-overlay{position:fixed;inset:0;background:rgba(10,20,40,.5);display:none;align-items:center;justify-content:center;z-index:400;padding:var(--space-4);}
+.modal-overlay.active{display:flex;}
+.modal-box{background:var(--surface);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);width:100%;max-width:560px;max-height:88vh;display:flex;flex-direction:column;}
+.modal-box.wide{max-width:920px;}
+.modal-head{padding:var(--space-4) var(--space-5);border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
+.modal-title{font-weight:700;font-size:var(--font-md);}
+.modal-close{width:28px;height:28px;border-radius:6px;border:none;background:transparent;color:var(--text-muted);font-size:18px;}
+.modal-close:hover{background:var(--bg-inset);}
+.modal-body{padding:var(--space-5);overflow-y:auto;}
+.modal-footer{padding:var(--space-4) var(--space-5);border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:var(--space-2);}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-4);}
+.form-group{display:flex;flex-direction:column;gap:5px;}
+.form-group.full{grid-column:1/-1;}
+.form-group label{font-size:var(--font-xs);font-weight:600;color:var(--text-muted);}
+.form-group input,.form-group select,.form-group textarea{
+  padding:8px 10px;border:1px solid var(--border-strong);border-radius:var(--radius-sm);font-size:var(--font-base);
+}
+.form-group textarea{resize:vertical;min-height:60px;}
+.form-error{color:var(--red-600);font-size:var(--font-xs);margin-top:2px;}
+
+.du-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--space-3);background:var(--bg-inset);padding:var(--space-3) var(--space-4);border-radius:var(--radius-sm);margin-bottom:var(--space-4);}
+.du-summary .item .lbl{font-size:var(--font-xs);color:var(--text-muted);}
+.du-summary .item .val{font-size:var(--font-md);font-weight:700;}
+
+/* =====================================================================================
+   SECTION: TOAST COMPONENT
+===================================================================================== */
+#toastRoot{position:fixed;top:var(--space-4);right:var(--space-4);z-index:600;display:flex;flex-direction:column;gap:var(--space-2);}
+.toast{
+  min-width:260px;max-width:360px;background:var(--surface);border-radius:var(--radius-sm);box-shadow:var(--shadow-md);
+  padding:12px 14px;display:flex;gap:10px;align-items:flex-start;border-left:4px solid var(--blue-600);animation:toastIn .18s ease;
+}
+@keyframes toastIn{from{opacity:0;transform:translateX(12px);}to{opacity:1;transform:none;}}
+.toast.success{border-left-color:var(--green-600);}
+.toast.error{border-left-color:var(--red-600);}
+.toast.warning{border-left-color:var(--amber-600);}
+.toast .msg{font-size:var(--font-sm);font-weight:500;flex:1;}
+.toast .close{background:none;border:none;color:var(--text-faint);font-size:14px;}
+
+/* =====================================================================================
+   SECTION: MISC (badges, alerts, critical strip, tabs)
+===================================================================================== */
+.alert-strip{display:flex;gap:var(--space-2);flex-wrap:wrap;margin-bottom:var(--space-4);}
+.alert-chip{display:flex;align-items:center;gap:6px;background:var(--red-100);color:var(--red-600);padding:7px 12px;border-radius:20px;font-size:var(--font-xs);font-weight:600;}
+.alert-chip.fabric{background:var(--amber-100);color:var(--amber-600);}
+.tabs{display:flex;gap:var(--space-2);border-bottom:1px solid var(--border);margin-bottom:var(--space-4);flex-wrap:wrap;}
+.tab-btn{padding:9px 14px;border:none;background:none;font-weight:600;font-size:var(--font-sm);color:var(--text-muted);border-bottom:2px solid transparent;margin-bottom:-1px;}
+.tab-btn.active{color:var(--blue-600);border-bottom-color:var(--blue-600);}
+.locked-banner{background:var(--amber-100);color:var(--amber-600);padding:var(--space-2) var(--space-3);border-radius:var(--radius-sm);font-size:var(--font-sm);font-weight:600;margin-bottom:var(--space-3);}
+.section-title{font-weight:700;font-size:var(--font-md);margin-bottom:var(--space-3);}
+.unsaved-indicator{font-size:var(--font-xs);color:var(--amber-600);font-weight:700;}
+
+/* =====================================================================================
+   SECTION: RESPONSIVE
+===================================================================================== */
+@media (max-width:1200px){
+  .kpi-grid{grid-template-columns:repeat(3,1fr);}
+}
+@media (max-width:900px){
+  .sidebar{position:fixed;top:0;bottom:0;left:0;z-index:300;width:var(--sidebar-width);transform:translateX(-100%);transition:transform .2s ease;}
+  .sidebar.mobile-open{transform:translateX(0);}
+  .sidebar.collapsed{width:var(--sidebar-width);}
+  .kpi-grid{grid-template-columns:repeat(2,1fr);}
+  .form-grid{grid-template-columns:1fr;}
+  .summary-grid{grid-template-columns:1fr;}
+}
+@media (max-width:560px){
+  .kpi-grid{grid-template-columns:1fr;}
+  .content{padding:var(--space-3);}
+}
+</style>
+</head>
+<body>
+
+<!-- =====================================================================================
+     LOGIN SCREEN
+===================================================================================== -->
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="login-brand">
+      <div class="mark">FQ</div>
+      <div>
+        <div class="name">First Quality Knits</div>
+        <div class="sub">Manufacturing Execution System</div>
+      </div>
+    </div>
+    <div id="loginError" class="login-error hidden"></div>
+    <div class="login-field">
+      <label for="loginUsername">Username</label>
+      <input type="text" id="loginUsername" autocomplete="username">
+    </div>
+    <div class="login-field">
+      <label for="loginPassword">Password</label>
+      <input type="password" id="loginPassword" autocomplete="current-password">
+    </div>
+    <button class="btn-login" id="loginBtn">Sign In</button>
+  </div>
+</div>
+
+<!-- =====================================================================================
+     APP SHELL
+===================================================================================== -->
+<div id="appShell">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="mark">FQ</div>
+      <div class="label">First Quality Knits</div>
+    </div>
+    <nav class="sidebar-nav" id="sidebarNav"></nav>
+    <div class="sidebar-collapse-btn" id="sidebarCollapseBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M15 18l-6-6 6-6"/></svg>
+      <span class="collapse-label">Collapse</span>
+    </div>
+  </aside>
+
+  <div class="main-area">
+    <header class="topbar">
+      <div class="flex items-center gap-3">
+        <button class="icon-btn hidden" id="mobileNavToggle" style="display:none;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
+        <div class="topbar-title" id="topbarTitle">Dashboard</div>
+      </div>
+      <div class="topbar-right">
+        <div class="sync-indicator"><span class="sync-dot" id="syncDot"></span><span id="syncLabel">Synced</span></div>
+        <button class="topbar-btn" id="refreshBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M1 4v6h6M23 20v-6h-6M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
+          Refresh
+        </button>
+        <button class="topbar-btn" id="exportBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+          Export Excel
+        </button>
+        <div class="user-chip">
+          <div class="avatar" id="userAvatar">–</div>
+          <div>
+            <div class="font-semibold text-sm" id="userName">–</div>
+            <div class="role" id="userRole">–</div>
+          </div>
+        </div>
+        <button class="icon-btn" id="logoutBtn" title="Sign out">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+        </button>
+      </div>
+    </header>
+    <main class="content" id="mainContent"></main>
+  </div>
+</div>
+
+<!-- =====================================================================================
+     COMMON MODAL SHELL
+===================================================================================== -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal-box" id="modalBox">
+    <div class="modal-head">
+      <div class="modal-title" id="modalTitle">Title</div>
+      <button class="modal-close" id="modalCloseBtn">&times;</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-footer" id="modalFooter"></div>
+  </div>
+</div>
+
+<div id="toastRoot"></div>
+
+<script>
+/*************************************************************************************
+ * MES APPLICATION — SINGLE FILE FRONTEND
+ * Namespace: MES.Core (config/api/auth/router/utils), MES.Components (table/modal/
+ * toast/filterbar/statcard), MES.Modules (one controller per sidebar item).
+ *************************************************************************************/
+const MES = { Core:{}, Components:{}, Modules:{}, State:{ session:null, currentModule:null } };
+
+/* =====================================================================================
+   SECTION: CORE — CONFIG
+===================================================================================== */
+MES.Core.Config = {
+  API_URL: 'https://script.google.com/macros/s/REPLACE_WITH_YOUR_DEPLOYMENT_ID/exec',
+  AUTOSYNC_MS: 5 * 60 * 1000
+};
+
+/* =====================================================================================
+   SECTION: CORE — UTILS
+===================================================================================== */
+MES.Core.Utils = {
+  debounce(fn, wait){
+    let t; return (...args)=>{ clearTimeout(t); t=setTimeout(()=>fn(...args), wait); };
+  },
+  fmtNum(v){
+    if(v===null||v===undefined||v==='') return '–';
+    const n = Number(v); if(isNaN(n)) return String(v);
+    return n.toLocaleString('en-IN', { maximumFractionDigits: 2 });
+  },
+  fmtPct(v){ return (v===null||v===undefined||v==='') ? '–' : this.fmtNum(v)+'%'; },
+  fmtDate(v){
+    if(!v) return '–';
+    const d = new Date(v); if(isNaN(d)) return String(v);
+    return d.toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' });
+  },
+  todayStr(){ const d=new Date(); return d.toISOString().slice(0,10); },
+  escape(str){
+    return String(str===undefined||str===null?'':str).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  },
+  uid(){ return 'u'+Math.random().toString(36).slice(2,10); },
+  ragClass(rag){ return rag ? 'rag-text '+rag : 'rag-text gray'; },
+  pillHtml(rag,label){ return `<span class="pill ${rag||'gray'}">${this.escape(label)}</span>`; }
+};
+
+/* =====================================================================================
+   SECTION: CORE — API CLIENT (single fetch wrapper, common request/response contract)
+===================================================================================== */
+MES.Core.Api = {
+  call(action, payload){
+    payload = payload || {};
+    const token = MES.State.session ? MES.State.session.token : '';
+    const url = MES.Core.Config.API_URL + '?action=' + encodeURIComponent(action)
+      + '&token=' + encodeURIComponent(token)
+      + '&payload=' + encodeURIComponent(JSON.stringify(payload));
+
+    MES.Core.setSyncing(true);
+    return fetch(url)
+      .then(res => res.json())
+      .then(json => {
+        MES.Core.setSyncing(false);
+        if(!json.success){
+          if(json.meta && json.meta.code === 'AUTH_REQUIRED'){
+            MES.Core.Auth.forceLogout('Your session has expired. Please sign in again.');
+          }
+          throw new Error(json.message || 'Request failed');
+        }
+        return json;
+      })
+      .catch(err => {
+        MES.Core.setSyncing(false, true);
+        MES.Components.Toast.show({ type:'error', message: err.message || 'Network error' });
+        throw err;
+      });
+  }
+};
+
+MES.Core.setSyncing = function(isSyncing, isError){
+  const dot = document.getElementById('syncDot');
+  const label = document.getElementById('syncLabel');
+  if(!dot) return;
+  if(isError){ dot.style.background = 'var(--red-600)'; label.textContent='Sync failed'; return; }
+  if(isSyncing){ dot.style.background = 'var(--amber-600)'; label.textContent='Syncing…'; }
+  else { dot.style.background = 'var(--green-600)'; label.textContent='Synced ' + new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}); }
+};
+
+/* =====================================================================================
+   SECTION: CORE — AUTH
+===================================================================================== */
+MES.Core.Auth = {
+  init(){
+    const raw = sessionStorage.getItem('mes_session');
+    if(raw){
+      try{ MES.State.session = JSON.parse(raw); MES.Core.bootApp(); return; }catch(e){}
+    }
+    document.getElementById('loginScreen').style.display='flex';
+  },
+  login(){
+    const username = document.getElementById('loginUsername').value.trim();
+    const password = document.getElementById('loginPassword').value;
+    const errBox = document.getElementById('loginError');
+    const btn = document.getElementById('loginBtn');
+    errBox.classList.add('hidden');
+    if(!username || !password){
+      errBox.textContent = 'Username and password are required'; errBox.classList.remove('hidden'); return;
+    }
+    btn.disabled = true; btn.textContent = 'Signing in…';
+    MES.Core.Api.call('login', { username, password }).then(json => {
+      MES.State.session = { token: json.data.token, user: json.data.user };
+      sessionStorage.setItem('mes_session', JSON.stringify(MES.State.session));
+      MES.Core.bootApp();
+    }).catch(err => {
+      errBox.textContent = err.message; errBox.classList.remove('hidden');
+    }).finally(() => { btn.disabled = false; btn.textContent = 'Sign In'; });
+  },
+  logout(){
+    MES.Core.Api.call('logout', {}).catch(()=>{});
+    this.forceLogout();
+  },
+  forceLogout(message){
+    sessionStorage.removeItem('mes_session');
+    MES.State.session = null;
+    document.getElementById('appShell').classList.remove('active');
+    document.getElementById('loginScreen').style.display='flex';
+    if(message) MES.Components.Toast.show({ type:'warning', message });
+  },
+  hasPermission(module, action){
+    const role = MES.State.session.user.role;
+    if(module === 'dashboard') return action === 'read';
+    if(role === 'Admin') return true;
+    const map = {
+      Manager:{ orderMaster:'rw', fabricTracker:'rw', productionTracker:'rw', qualityTracker:'rw', planning:'rw', reports:'r', settings:'r' },
+      Supervisor:{ fabricTracker:'rw', productionTracker:'rw', qualityTracker:'rw', planning:'r', reports:'r' },
+      Operator:{ productionTracker:'rw', reports:'r' },
+      'QC Inspector':{ qualityTracker:'rw', reports:'r' },
+      Viewer:{ reports:'r' }
+    };
+    const perm = (map[role]||{})[module];
+    if(!perm) return false;
+    return action === 'read' ? true : perm === 'rw';
+  }
+};
+
+/* =====================================================================================
+   SECTION: COMPONENTS — TOAST
+===================================================================================== */
+MES.Components.Toast = {
+  show({ type='info', message='', duration=4000 }){
+    const root = document.getElementById('toastRoot');
+    const el = document.createElement('div');
+    el.className = 'toast ' + type;
+    el.innerHTML = `<div class="msg">${MES.Core.Utils.escape(message)}</div><button class="close">&times;</button>`;
+    el.querySelector('.close').onclick = () => el.remove();
+    root.appendChild(el);
+    setTimeout(() => el.remove(), duration);
+  }
+};
+
+/* =====================================================================================
+   SECTION: COMPONENTS — MODAL
+===================================================================================== */
+MES.Components.Modal = {
+  open({ title, bodyHtml, footerHtml, wide, onRender }){
+    document.getElementById('modalTitle').textContent = title;
+    document.getElementById('modalBody').innerHTML = bodyHtml;
+    document.getElementById('modalFooter').innerHTML = footerHtml || '';
+    document.getElementById('modalBox').classList.toggle('wide', !!wide);
+    document.getElementById('modalOverlay').classList.add('active');
+    if(onRender) onRender();
+  },
+  close(){
+    document.getElementById('modalOverlay').classList.remove('active');
+  }
+};
+document.getElementById('modalCloseBtn').onclick = () => MES.Components.Modal.close();
+document.getElementById('modalOverlay').addEventListener('click', e => {
+  if(e.target.id === 'modalOverlay') MES.Components.Modal.close();
+});
+
+/* =====================================================================================
+   SECTION: COMPONENTS — FILTER BAR
+===================================================================================== */
+MES.Components.FilterBar = {
+  render(fields){
+    const html = fields.map(f => {
+      if(f.type === 'search'){
+        return `<div class="filter-field search"><label>${MES.Core.Utils.escape(f.label)}</label>
+          <input type="text" data-filter="${f.key}" placeholder="${MES.Core.Utils.escape(f.placeholder||'Search…')}"></div>`;
+      }
+      if(f.type === 'date'){
+        return `<div class="filter-field"><label>${MES.Core.Utils.escape(f.label)}</label>
+          <input type="date" data-filter="${f.key}" value="${f.value||''}"></div>`;
+      }
+      const opts = ['All'].concat(f.options||[]).map(o => `<option value="${MES.Core.Utils.escape(o)}">${MES.Core.Utils.escape(o)}</option>`).join('');
+      return `<div class="filter-field"><label>${MES.Core.Utils.escape(f.label)}</label>
+        <select data-filter="${f.key}">${opts}</select></div>`;
+    }).join('');
+    return `<div class="filter-bar">${html}<button class="filter-clear-btn" id="filterClearBtn">Clear Filters</button></div>`;
+  },
+  bind(container, onChange){
+    const inputs = container.querySelectorAll('[data-filter]');
+    const collect = () => {
+      const filters = {};
+      inputs.forEach(el => { if(el.value && el.value !== 'All') filters[el.dataset.filter] = el.value; });
+      onChange(filters);
+    };
+    inputs.forEach(el => el.addEventListener(el.tagName==='SELECT' ? 'change' : 'input', MES.Core.Utils.debounce(collect, 300)));
+    const clearBtn = container.querySelector('#filterClearBtn');
+    if(clearBtn) clearBtn.onclick = () => { inputs.forEach(el => el.value = el.tagName==='SELECT' ? 'All' : ''); onChange({}); };
+  }
+};
+
+/* =====================================================================================
+   SECTION: COMPONENTS — STAT CARD / KPI GRID
+===================================================================================== */
+MES.Components.StatCards = {
+  renderKpiGrid(cards){
+    return `<div class="kpi-grid">${cards.map(c => `
+      <div class="kpi-card ${c.rag?('rag-'+c.rag):''}">
+        <div class="kpi-icon">${c.icon||'●'}</div>
+        <div class="kpi-label">${MES.Core.Utils.escape(c.label)}</div>
+        <div class="kpi-value">${c.value}</div>
+        <div class="kpi-sub">${MES.Core.Utils.escape(c.sub||'')}</div>
+      </div>`).join('')}</div>`;
+  },
+  renderMiniStrip(items){
+    return `<div class="stat-strip">${items.map(i => `
+      <div class="stat-mini"><div class="lbl">${MES.Core.Utils.escape(i.label)}</div><div class="val">${i.value}</div></div>`).join('')}</div>`;
+  }
+};
+
+/* =====================================================================================
+   SECTION: COMPONENTS — GENERIC TABLE (with optional inline-editable mode)
+===================================================================================== */
+MES.Components.Table = {
+  /**
+   * config: { columns, rows, idField, rowActions, editable, onCellInput,
+   *           sortField, sortDir, onSort, page, pageSize, total, onPageChange,
+   *           emptyMessage, footer }
+   */
+  render(config){
+    const cols = config.columns;
+    const thead = cols.map(c => {
+      const sortAttr = config.onSort ? ` data-sort="${c.key}"` : '';
+      const arrow = (config.sortField===c.key) ? (config.sortDir==='desc'?' ▼':' ▲') : '';
+      return `<th class="${config.onSort?'sortable':''}"${sortAttr} style="${c.align?'text-align:'+c.align+';':''}">${MES.Core.Utils.escape(c.label)}${arrow}</th>`;
+    }).join('') + (config.rowActions ? '<th></th>' : '');
+
+    let tbody;
+    if(!config.rows.length){
+      tbody = `<tr><td colspan="${cols.length + (config.rowActions?1:0)}"><div class="table-empty">${config.emptyMessage||'No records found'}</div></td></tr>`;
+    } else {
+      tbody = config.rows.map(row => {
+        const rowId = row[config.idField];
+        const rowClass = row.__dirty ? 'row-dirty' : (row.__saved ? 'row-saved' : '');
+        const cells = cols.map(c => {
+          if(c.editable){
+            const val = row[c.key] === undefined || row[c.key] === null ? '' : row[c.key];
+            if(c.type === 'select'){
+              const opts = (c.options||[]).map(o => `<option value="${MES.Core.Utils.escape(o)}" ${String(o)===String(val)?'selected':''}>${MES.Core.Utils.escape(o)}</option>`).join('');
+              return `<td class="cell-editable"><select data-row="${rowId}" data-key="${c.key}">${opts}</select></td>`;
+            }
+            return `<td class="cell-editable"><input type="${c.type||'text'}" data-row="${rowId}" data-key="${c.key}" value="${MES.Core.Utils.escape(val)}" ${c.type==='number'?'min="0" step="any"':''}></td>`;
+          }
+          const display = c.format ? c.format(row) : MES.Core.Utils.escape(row[c.key]);
+          return `<td data-row="${rowId}" data-field="${c.key}" style="${c.align?'text-align:'+c.align+';':''}">${display}</td>`;
+        }).join('');
+        const actions = config.rowActions ? `<td><div class="row-actions">${config.rowActions.map(a =>
+          `<button class="icon-btn ${a.danger?'danger':''}" data-action="${a.key}" data-row="${rowId}" title="${MES.Core.Utils.escape(a.title)}">${a.icon}</button>`
+        ).join('')}</div></td>` : '';
+        return `<tr class="${rowClass}">${cells}${actions}</tr>`;
+      }).join('');
+    }
+
+    const tfoot = config.footer ? `<tfoot><tr>${config.footer.map(f => `<td style="${f.align?'text-align:'+f.align+';':''}">${f.value}</td>`).join('')}${config.rowActions?'<td></td>':''}</tr></tfoot>` : '';
+
+    const pagination = config.total !== undefined ? `
+      <div class="pagination">
+        <span class="page-info">${config.total} record${config.total===1?'':'s'} · Page ${config.page} of ${Math.max(1,Math.ceil(config.total/config.pageSize))}</span>
+        <button data-page="prev" ${config.page<=1?'disabled':''}>Prev</button>
+        <button data-page="next" ${config.page>=Math.ceil(config.total/config.pageSize)?'disabled':''}>Next</button>
+      </div>` : '';
+
+    return `<div class="table-scroll"><table class="data-table"><thead><tr>${thead}</tr></thead><tbody>${tbody}</tbody>${tfoot}</table></div>${pagination}`;
+  },
+
+  bind(container, config){
+    if(config.onSort){
+      container.querySelectorAll('th[data-sort]').forEach(th => {
+        th.addEventListener('click', () => config.onSort(th.dataset.sort));
+      });
+    }
+    if(config.onPageChange){
+      const prev = container.querySelector('[data-page="prev"]');
+      const next = container.querySelector('[data-page="next"]');
+      if(prev) prev.addEventListener('click', () => config.onPageChange(config.page - 1));
+      if(next) next.addEventListener('click', () => config.onPageChange(config.page + 1));
+    }
+    if(config.onCellInput){
+      container.querySelectorAll('[data-row][data-key]').forEach(el => {
+        el.addEventListener(el.tagName==='SELECT'?'change':'input', () => {
+          config.onCellInput(el.dataset.row, el.dataset.key, el.value);
+        });
+      });
+    }
+    if(config.rowActions){
+      container.querySelectorAll('[data-action]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const action = config.rowActions.find(a => a.key === btn.dataset.action);
+          if(action) action.onClick(btn.dataset.row);
+        });
+      });
+    }
+  },
+
+  /** Targeted DOM patch for a computed cell — avoids full re-render (preserves input focus). */
+  patchCell(rowId, field, value){
+    const el = document.querySelector(`[data-row="${rowId}"][data-field="${field}"]`);
+    if(el) el.innerHTML = value;
+  }
+};
+
+/* =====================================================================================
+   SECTION: CORE — ROUTER
+===================================================================================== */
+MES.Core.Router = {
+  MODULE_ORDER: [
+    { key:'dashboard', title:'Dashboard', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>' },
+    { key:'orderMaster', title:'Order Master', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>' },
+    { key:'fabricTracker', title:'Fabric Tracker', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6l3-3 3 3M3 3v18M21 18l-3 3-3-3M21 21V3"/></svg>' },
+    { key:'productionTracker', title:'Production Tracker', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M2 12h4M18 12h4M4.9 19.1l2.8-2.8M16.3 7.7l2.8-2.8"/></svg>' },
+    { key:'qualityTracker', title:'Quality Tracker', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/></svg>' },
+    { key:'planning', title:'Planning', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>' },
+    { key:'reports', title:'Reports', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>' },
+    { key:'settings', title:'Settings', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>' }
+  ],
+
+  renderNav(){
+    const nav = document.getElementById('sidebarNav');
+    nav.innerHTML = this.MODULE_ORDER.map(m => `
+      <div class="nav-item" data-module="${m.key}">${m.icon}<span class="nav-label">${m.title}</span></div>
+    `).join('');
+    nav.querySelectorAll('.nav-item').forEach(el => {
+      el.addEventListener('click', () => this.navigate(el.dataset.module));
+    });
+  },
+
+  navigate(moduleKey){
+    if(MES.State.currentModule && MES.State.currentModule.destroy) MES.State.currentModule.destroy();
+    document.querySelectorAll('.nav-item').forEach(el => el.classList.toggle('active', el.dataset.module === moduleKey));
+    const meta = this.MODULE_ORDER.find(m => m.key === moduleKey);
+    document.getElementById('topbarTitle').textContent = meta ? meta.title : '';
+    const container = document.getElementById('mainContent');
+    container.innerHTML = '';
+    const mod = MES.Modules[moduleKey];
+    MES.State.currentModule = mod;
+    if(mod && mod.init) mod.init(container);
+    if(window.innerWidth <= 900) document.getElementById('sidebar').classList.remove('mobile-open');
+  }
+};
+
+/* =====================================================================================
+   SECTION: MODULE — DASHBOARD (read-only)
+===================================================================================== */
+MES.Modules.dashboard = {
+  init(container){
+    this.filters = { date: MES.Core.Utils.todayStr() };
+    this.container = container;
+    this.buyerOptions = []; this.lineOptions = [];
+    MES.Core.Api.call('getSettings', {}).then(r => {
+      this.buyerOptions = (r.data.Buyer||[]).map(x=>x.value);
+      this.lineOptions = (r.data.Line||[]).map(x=>x.value);
+      this.render();
+    }).catch(() => this.render());
+  },
+  render(){
+    this.container.innerHTML = `
+      <div id="dashKpis"></div>
+      ${MES.Components.FilterBar.render([
+        { key:'date', label:'Date', type:'date', value:this.filters.date },
+        { key:'buyer', label:'Buyer', options:this.buyerOptions },
+        { key:'orderStatus', label:'Order Status', options:['Pending','In-Progress','Completed','On-Hold','Cancelled','Shipped'] },
+        { key:'line', label:'Line', options:this.lineOptions },
+        { key:'search', label:'Search', type:'search', placeholder:'Order / Style / Buyer' }
+      ])}
+      <div id="criticalAlerts"></div>
+      <div class="panel">
+        <div class="panel-header">Order Production Status</div>
+        <div class="panel-body" id="dashMainTable"></div>
+      </div>
+      <div class="summary-grid">
+        <div class="panel"><div class="panel-header">Buyer Summary</div><div class="panel-body" id="buyerSummary"></div></div>
+        <div class="panel"><div class="panel-header">Line Summary</div><div class="panel-body" id="lineSummary"></div></div>
+        <div class="panel"><div class="panel-header">Production Summary</div><div class="panel-body" id="prodSummary"></div></div>
+        <div class="panel"><div class="panel-header">Shipment Summary (7 days)</div><div class="panel-body" id="shipSummary"></div></div>
+      </div>`;
+    MES.Components.FilterBar.bind(this.container, f => { this.filters = Object.assign(this.filters, f); this.loadAll(); });
+    this.loadAll();
+    this._interval = setInterval(() => this.loadAll(), MES.Core.Config.AUTOSYNC_MS);
+  },
+  loadAll(){
+    MES.Core.Api.call('getDashboardStats', this.filters).then(r => this.renderKpis(r.data));
+    MES.Core.Api.call('getCriticalAlerts', {}).then(r => this.renderAlerts(r.data));
+    MES.Core.Api.call('getOrderStatusGrid', Object.assign({ page:this.page||1, pageSize:25 }, this.filters)).then(r => this.renderMainTable(r.data, r.meta));
+    MES.Core.Api.call('getBuyerSummary', { date:this.filters.date }).then(r => this.renderBuyerSummary(r.data));
+    MES.Core.Api.call('getLineSummary', { date:this.filters.date }).then(r => this.renderLineSummary(r.data));
+    MES.Core.Api.call('getProductionSummary', { date:this.filters.date }).then(r => this.renderProdSummary(r.data));
+    MES.Core.Api.call('getShipmentSummary', {}).then(r => this.renderShipSummary(r.data));
+  },
+  renderKpis(d){
+    const U = MES.Core.Utils;
+    document.getElementById('dashKpis').innerHTML = MES.Components.StatCards.renderKpiGrid([
+      { label:'Open Orders', value:U.fmtNum(d.openOrders), sub:'Orders' },
+      { label:'Order Qty', value:U.fmtNum(d.orderQty), sub:'Pcs' },
+      { label:"Today's Plan", value:U.fmtNum(d.planToday), sub:'Pcs' },
+      { label:"Today's Actual", value:U.fmtNum(d.actualToday), sub:'Pcs' },
+      { label:'Achievement %', value:U.fmtPct(d.achievementPct), sub:'vs Plan', rag:d.achievementRag },
+      { label:'Shipment Today', value:U.fmtNum(d.shipmentToday.orders), sub:U.fmtNum(d.shipmentToday.qty)+' Pcs' },
+      { label:'Balance Qty', value:U.fmtNum(d.balanceQty), sub:'Pcs Remaining' },
+      { label:'Delay Orders', value:U.fmtNum(d.delayOrders), sub:'Open Delays', rag:d.delayOrders>0?'red':'green' },
+      { label:'Risk Orders', value:U.fmtNum(d.riskOrders.high), sub:d.riskOrders.medium+' medium · '+d.riskOrders.low+' low', rag:d.riskOrders.high>0?'red':'green' },
+      { label:'Upcoming Shipments', value:U.fmtNum(d.upcomingShipments.orders), sub:U.fmtNum(d.upcomingShipments.qty)+' Pcs (7 days)' },
+      { label:'Critical Orders', value:U.fmtNum(d.criticalOrders), sub:'Need Attention', rag:d.criticalOrders>0?'red':'green' },
+      { label:'Required Per Day', value:U.fmtNum(d.requiredPerDay), sub:'Pcs / day' }
+    ]);
+  },
+  renderAlerts(alerts){
+    const box = document.getElementById('criticalAlerts');
+    if(!alerts.length){ box.innerHTML=''; return; }
+    box.innerHTML = `<div class="alert-strip">${alerts.map(a => `<div class="alert-chip ${a.type==='fabric'?'fabric':''}">⚠ ${MES.Core.Utils.escape(a.message)}</div>`).join('')}</div>`;
+  },
+  renderMainTable(rows, meta){
+    const U = MES.Core.Utils;
+    const columns = [
+      { key:'Buyer', label:'Buyer' }, { key:'Order_No', label:'Order No' }, { key:'Style_Item', label:'Style' },
+      { key:'Order_Qty', label:'Order Qty', format:r=>U.fmtNum(r.Order_Qty) },
+      { key:'Shipment_Date', label:'Ship Date', format:r=>U.fmtDate(r.Shipment_Date) },
+      { key:'Days_Left', label:'Days Left', format:r=>`<span class="${r.Days_Left<=3?'rag-text red':(r.Days_Left<=7?'rag-text amber':'rag-text green')}">${r.Days_Left}</span>` },
+      { key:'Cut_Pct', label:'Cut %', format:r=>U.fmtPct(r.Cut_Pct) },
+      { key:'Sewing_Pct', label:'Sew %', format:r=>U.fmtPct(r.Sewing_Pct) },
+      { key:'Packing_Pct', label:'Pack %', format:r=>U.fmtPct(r.Packing_Pct) },
+      { key:'Shipped_Pct', label:'Shipped %', format:r=>U.fmtPct(r.Shipped_Pct) },
+      { key:'Achievement_Pct', label:'Ach %', format:r=>`<span class="${U.ragClass(r.Achievement_Rag)}">${U.fmtPct(r.Achievement_Pct)}</span>` },
+      { key:'Balance_Qty', label:'Balance', format:r=>U.fmtNum(r.Balance_Qty) },
+      { key:'Required_Per_Day', label:'Req/Day', format:r=>U.fmtNum(r.Required_Per_Day) },
+      { key:'DHU', label:'DHU', format:r=>`<span class="${U.ragClass(r.DHU_Rag)}">${U.fmtNum(r.DHU)}</span>` },
+      { key:'Delay_Reason', label:'Delay Reason' }
+    ];
+    const html = MES.Components.Table.render({ columns, rows, idField:'Order_No', page:meta.page, pageSize:meta.pageSize, total:meta.total,
+      onPageChange:(p)=>{ this.page=p; this.loadAll(); }, emptyMessage:'No open orders match the current filters' });
+    const el = document.getElementById('dashMainTable');
+    el.innerHTML = html;
+    MES.Components.Table.bind(el, { onPageChange:(p)=>{ this.page=p; this.loadAll(); } });
+  },
+  renderBuyerSummary(rows){
+    const U = MES.Core.Utils;
+    document.getElementById('buyerSummary').innerHTML = MES.Components.Table.render({
+      columns:[ {key:'Buyer',label:'Buyer'}, {key:'Orders',label:'Orders',format:r=>U.fmtNum(r.Orders)},
+        {key:'Order_Qty',label:'Order Qty',format:r=>U.fmtNum(r.Order_Qty)}, {key:'Plan_Today',label:'Plan',format:r=>U.fmtNum(r.Plan_Today)},
+        {key:'Actual_Today',label:'Actual',format:r=>U.fmtNum(r.Actual_Today)}, {key:'Achievement_Pct',label:'Ach %',format:r=>U.fmtPct(r.Achievement_Pct)},
+        {key:'Delay_Orders',label:'Delays',format:r=>U.fmtNum(r.Delay_Orders)} ],
+      rows, idField:'Buyer', emptyMessage:'No buyer data'
+    });
+  },
+  renderLineSummary(rows){
+    const U = MES.Core.Utils;
+    document.getElementById('lineSummary').innerHTML = MES.Components.Table.render({
+      columns:[ {key:'Line',label:'Line'}, {key:'Plan',label:'Plan',format:r=>U.fmtNum(r.Plan)}, {key:'Actual',label:'Actual',format:r=>U.fmtNum(r.Actual)},
+        {key:'Achievement_Pct',label:'Ach %',format:r=>U.fmtPct(r.Achievement_Pct)}, {key:'Efficiency_Pct',label:'Eff %',format:r=>U.fmtPct(r.Efficiency_Pct)},
+        {key:'DHU',label:'DHU',format:r=>U.fmtNum(r.DHU)} ],
+      rows, idField:'Line', emptyMessage:'No line data for this date'
+    });
+  },
+  renderProdSummary(rows){
+    const U = MES.Core.Utils;
+    document.getElementById('prodSummary').innerHTML = MES.Components.Table.render({
+      columns:[ {key:'Stage',label:'Stage'}, {key:'Planned_Qty',label:'Planned',format:r=>U.fmtNum(r.Planned_Qty)},
+        {key:'Produced_Qty',label:'Produced',format:r=>U.fmtNum(r.Produced_Qty)}, {key:'Achievement_Pct',label:'Ach %',format:r=>U.fmtPct(r.Achievement_Pct)},
+        {key:'Rejected_Qty',label:'Rejected',format:r=>U.fmtNum(r.Rejected_Qty)} ],
+      rows, idField:'Stage', emptyMessage:'No production data'
+    });
+  },
+  renderShipSummary(rows){
+    const U = MES.Core.Utils;
+    document.getElementById('shipSummary').innerHTML = MES.Components.Table.render({
+      columns:[ {key:'Ship_Date',label:'Ship Date',format:r=>U.fmtDate(r.Ship_Date)}, {key:'Orders',label:'Orders',format:r=>U.fmtNum(r.Orders)},
+        {key:'Qty',label:'Qty',format:r=>U.fmtNum(r.Qty)}, {key:'Risk_Orders',label:'Risk',format:r=>`<span class="${r.Risk_Orders>0?'rag-text red':'rag-text green'}">${r.Risk_Orders}</span>`} ],
+      rows, idField:'Ship_Date', emptyMessage:'No shipments in the next 7 days'
+    });
+  },
+  destroy(){ if(this._interval) clearInterval(this._interval); }
+};
+
+/* =====================================================================================
+   SECTION: MODULE — ORDER MASTER (full CRUD)
+===================================================================================== */
+MES.Modules.orderMaster = {
+  init(container){
+    this.container = container; this.page = 1; this.filters = {};
+    this.canEdit = MES.Core.Auth.hasPermission('orderMaster','write');
+    this.render();
+  },
+  render(){
+    this.container.innerHTML = `
+      ${MES.Components.FilterBar.render([
+        { key:'Order_Status', label:'Status', options:['Pending','In-Progress','Completed','On-Hold','Cancelled','Shipped'] },
+        { key:'search', label:'Search', type:'search', placeholder:'Order / Style / Buyer / PO' }
+      ])}
+      <div class="panel">
+        <div class="table-toolbar">
+          <div class="font-semibold">All Orders</div>
+          ${this.canEdit ? '<button class="btn btn-primary" id="newOrderBtn">+ New Order</button>' : ''}
+        </div>
+        <div id="orderTableBody"></div>
+      </div>`;
+    MES.Components.FilterBar.bind(this.container, f => { this.filters = f; this.page = 1; this.load(); });
+    if(this.canEdit) document.getElementById('newOrderBtn').onclick = () => this.openForm(null);
+    this.load();
+  },
+  load(){
+    MES.Core.Api.call('getOrders', Object.assign({ page:this.page, pageSize:25, search:this.filters.search, filters:this.filters }, {}))
+      .then(r => this.renderTable(r.data, r.meta));
+  },
+  renderTable(rows, meta){
+    const U = MES.Core.Utils;
+    const columns = [
+      { key:'Order_ID', label:'Order ID' }, { key:'Buyer_Name', label:'Buyer' }, { key:'Style_No', label:'Style' },
+      { key:'Order_Qty', label:'Qty', format:r=>U.fmtNum(r.Order_Qty) },
+      { key:'Planned_Ship_Date', label:'Ship Date', format:r=>U.fmtDate(r.Planned_Ship_Date) },
+      { key:'Order_Status', label:'Status', format:r=>{
+          const ragMap = { Pending:'gray', 'In-Progress':'amber', Completed:'green', Shipped:'green', 'On-Hold':'red', Cancelled:'red' };
+          return U.pillHtml(ragMap[r.Order_Status]||'gray', r.Order_Status);
+        }},
+      { key:'Priority', label:'Priority' }
+    ];
+    const rowActions = this.canEdit ? [
+      { key:'edit', icon:'✎', title:'Edit', onClick:(id)=>this.openForm(rows.find(r=>r.Order_ID===id)) },
+      { key:'cancel', icon:'✕', title:'Cancel Order', danger:true, onClick:(id)=>this.confirmCancel(id) }
+    ] : null;
+    const html = MES.Components.Table.render({ columns, rows, idField:'Order_ID', rowActions, page:meta.page, pageSize:meta.pageSize, total:meta.total,
+      emptyMessage:'No orders found' });
+    const el = document.getElementById('orderTableBody');
+    el.innerHTML = html;
+    MES.Components.Table.bind(el, { rowActions, onPageChange:(p)=>{ this.page=p; this.load(); } });
+  },
+  openForm(order){
+    const isEdit = !!order;
+    const v = order || {};
+    MES.Components.Modal.open({
+      title: isEdit ? 'Edit Order — ' + v.Order_ID : 'New Order',
+      bodyHtml: `
+        <div class="form-grid">
+          <div class="form-group"><label>Buyer Name</label><input id="f_Buyer_Name" value="${MES.Core.Utils.escape(v.Buyer_Name||'')}"></div>
+          <div class="form-group"><label>PO Number</label><input id="f_PO_Number" value="${MES.Core.Utils.escape(v.PO_Number||'')}"></div>
+          <div class="form-group"><label>Style No</label><input id="f_Style_No" value="${MES.Core.Utils.escape(v.Style_No||'')}"></div>
+          <div class="form-group"><label>Style Description</label><input id="f_Style_Description" value="${MES.Core.Utils.escape(v.Style_Description||'')}"></div>
+          <div class="form-group"><label>Order Qty</label><input type="number" min="0" id="f_Order_Qty" value="${v.Order_Qty||''}"></div>
+          <div class="form-group"><label>Fabric Required Qty</label><input type="number" min="0" id="f_Fabric_Required_Qty" value="${v.Fabric_Required_Qty||''}"></div>
+          <div class="form-group"><label>Fabric Type Required</label><input id="f_Fabric_Type_Required" value="${MES.Core.Utils.escape(v.Fabric_Type_Required||'')}"></div>
+          <div class="form-group"><label>Line Assigned</label><input id="f_Line_Assigned" value="${MES.Core.Utils.escape(v.Line_Assigned||'')}"></div>
+          <div class="form-group"><label>Order Received Date</label><input type="date" id="f_Order_Received_Date" value="${v.Order_Received_Date||''}"></div>
+          <div class="form-group"><label>Planned Ship Date</label><input type="date" id="f_Planned_Ship_Date" value="${v.Planned_Ship_Date||''}"></div>
+          <div class="form-group"><label>Priority</label>
+            <select id="f_Priority">${['Low','Medium','High','Critical'].map(p=>`<option ${v.Priority===p?'selected':''}>${p}</option>`).join('')}</select></div>
+          <div class="form-group"><label>Order Status</label>
+            <select id="f_Order_Status">${['Pending','In-Progress','Completed','On-Hold','Cancelled','Shipped'].map(p=>`<option ${v.Order_Status===p?'selected':''}>${p}</option>`).join('')}</select></div>
+          <div class="form-group full"><label>Remarks</label><textarea id="f_Remarks">${MES.Core.Utils.escape(v.Remarks||'')}</textarea></div>
+        </div>
+        <div class="form-error hidden" id="formError"></div>`,
+      footerHtml: `<button class="btn btn-secondary" id="formCancelBtn">Cancel</button><button class="btn btn-primary" id="formSaveBtn">Save Order</button>`
+    });
+    document.getElementById('formCancelBtn').onclick = () => MES.Components.Modal.close();
+    document.getElementById('formSaveBtn').onclick = () => this.saveForm(isEdit ? v.Order_ID : null);
+  },
+  saveForm(orderId){
+    const get = id => document.getElementById(id).value;
+    const payload = {
+      Buyer_Name:get('f_Buyer_Name'), PO_Number:get('f_PO_Number'), Style_No:get('f_Style_No'),
+      Style_Description:get('f_Style_Description'), Order_Qty:Number(get('f_Order_Qty')),
+      Fabric_Required_Qty:Number(get('f_Fabric_Required_Qty')), Fabric_Type_Required:get('f_Fabric_Type_Required'),
+      Line_Assigned:get('f_Line_Assigned'), Order_Received_Date:get('f_Order_Received_Date'),
+      Planned_Ship_Date:get('f_Planned_Ship_Date'), Priority:get('f_Priority'), Order_Status:get('f_Order_Status'),
+      Remarks:get('f_Remarks')
+    };
+    const action = orderId ? 'updateOrder' : 'createOrder';
+    const body = orderId ? { id:orderId, updates:payload } : payload;
+    MES.Core.Api.call(action, body).then(() => {
+      MES.Components.Modal.close();
+      MES.Components.Toast.show({ type:'success', message:'Order saved successfully' });
+      this.load();
+    }).catch(err => {
+      const box = document.getElementById('formError');
+      box.textContent = err.message; box.classList.remove('hidden');
+    });
+  },
+  confirmCancel(orderId){
+    MES.Components.Modal.open({
+      title:'Cancel Order',
+      bodyHtml:`<p>Are you sure you want to cancel order <strong>${MES.Core.Utils.escape(orderId)}</strong>? This can be reversed later by editing the order status.</p>`,
+      footerHtml:`<button class="btn btn-secondary" id="cancelNoBtn">Back</button><button class="btn btn-danger" id="cancelYesBtn">Cancel Order</button>`
+    });
+    document.getElementById('cancelNoBtn').onclick = () => MES.Components.Modal.close();
+    document.getElementById('cancelYesBtn').onclick = () => {
+      MES.Core.Api.call('cancelOrder', { id:orderId }).then(() => {
+        MES.Components.Modal.close();
+        MES.Components.Toast.show({ type:'success', message:'Order cancelled' });
+        this.load();
+      });
+    };
+  }
+};
+
+/* =====================================================================================
+   SECTION: MODULE — FABRIC TRACKER (daily inline-editable grid)
+===================================================================================== */
+MES.Modules.fabricTracker = {
+  init(container){
+    this.container = container; this.date = MES.Core.Utils.todayStr(); this.dirty = {};
+    this.canEdit = MES.Core.Auth.hasPermission('fabricTracker','write');
+    this.render();
+  },
+  render(){
+    this.container.innerHTML = `
+      <div class="filter-bar">
+        <div class="filter-field"><label>Entry Date</label><input type="date" id="fabDate" value="${this.date}"></div>
+        <div style="flex:1"></div>
+        <span class="unsaved-indicator hidden" id="fabUnsaved"></span>
+        ${this.canEdit ? `<button class="btn btn-secondary" id="fabLockBtn">Save &amp; Lock Today</button><button class="btn btn-primary" id="fabSaveBtn">Save All Entries</button>` : ''}
+      </div>
+      <div id="fabStrip"></div>
+      <div class="panel"><div class="panel-header">Daily Fabric Receipt Entry</div><div class="panel-body" id="fabTableBody"></div></div>`;
+    document.getElementById('fabDate').onchange = (e) => { this.date = e.target.value; this.dirty={}; this.load(); };
+    if(this.canEdit){
+      document.getElementById('fabSaveBtn').onclick = () => this.save(false);
+      document.getElementById('fabLockBtn').onclick = () => this.save(true);
+    }
+    this.load();
+  },
+  load(){
+    MES.Core.Api.call('getFabricEntryGrid', { date:this.date }).then(r => { this.rows = r.data; this.renderStrip(); this.renderTable(); });
+  },
+  renderStrip(){
+    const U = MES.Core.Utils;
+    const totalOrders = this.rows.length;
+    const totalRequired = this.rows.reduce((s,r)=>s+Number(r.Required_Fabric||0),0);
+    const receivedToday = this.rows.reduce((s,r)=>s+Number(r.Received_Today||0),0);
+    const ready = this.rows.filter(r=>r.Readiness_Pct>=100).length;
+    document.getElementById('fabStrip').innerHTML = MES.Components.StatCards.renderMiniStrip([
+      { label:'Total Open Orders', value:U.fmtNum(totalOrders) },
+      { label:'Total Required Fabric', value:U.fmtNum(totalRequired) },
+      { label:'Received Today', value:U.fmtNum(receivedToday) },
+      { label:'Orders Fabric-Ready', value:U.fmtNum(ready) }
+    ]);
+  },
+  renderTable(){
+    const U = MES.Core.Utils;
+    const columns = [
+      { key:'Buyer', label:'Buyer' }, { key:'Style', label:'Style' }, { key:'Color', label:'Color' },
+      { key:'Order_Qty', label:'Order Qty', format:r=>U.fmtNum(r.Order_Qty) },
+      { key:'Required_Fabric', label:'Required', format:r=>U.fmtNum(r.Required_Fabric) },
+      { key:'Received_Till_Yesterday', label:'Recd Till Yday', format:r=>U.fmtNum(r.Received_Till_Yesterday) },
+      { key:'Received_Today', label:'Recd Today', editable:this.canEdit, type:'number' },
+      { key:'Balance', label:'Balance', format:r=>U.fmtNum(r.Balance) },
+      { key:'Readiness_Pct', label:'Readiness %', format:r=>`<span class="${U.ragClass(r.Readiness_Rag)}">${U.fmtPct(r.Readiness_Pct)}</span>` },
+      { key:'Remarks', label:'Remarks', editable:this.canEdit, type:'text' }
+    ];
+    const el = document.getElementById('fabTableBody');
+    el.innerHTML = MES.Components.Table.render({ columns, rows:this.rows, idField:'Order_ID', emptyMessage:'No open orders' });
+    MES.Components.Table.bind(el, { onCellInput:(rowId,key,value)=>this.onEdit(rowId,key,value) });
+  },
+  onEdit(rowId, key, value){
+    const row = this.rows.find(r=>r.Order_ID===rowId);
+    row[key] = key==='Remarks' ? value : Number(value||0);
+    row.__dirty = true;
+    if(!this.dirty[rowId]) this.dirty[rowId] = {};
+    this.dirty[rowId][key] = row[key];
+    this.dirty[rowId].Order_ID = rowId;
+    document.getElementById('fabUnsaved').classList.remove('hidden');
+    document.getElementById('fabUnsaved').textContent = Object.keys(this.dirty).length + ' unsaved row(s)';
+    const balance = Number(row.Required_Fabric||0) - (Number(row.Received_Till_Yesterday||0) + Number(row.Received_Today||0));
+    const readiness = row.Required_Fabric ? Math.round(((Number(row.Received_Till_Yesterday||0)+Number(row.Received_Today||0))/row.Required_Fabric)*10000)/100 : 0;
+    row.Balance = Math.round(balance*100)/100; row.Readiness_Pct = readiness;
+    row.Readiness_Rag = readiness>=95?'green':(readiness>=60?'amber':'red');
+    MES.Components.Table.patchCell(rowId, 'Balance', MES.Core.Utils.fmtNum(row.Balance));
+    MES.Components.Table.patchCell(rowId, 'Readiness_Pct', `<span class="${MES.Core.Utils.ragClass(row.Readiness_Rag)}">${MES.Core.Utils.fmtPct(row.Readiness_Pct)}</span>`);
+  },
+  save(lockAfter){
+    const entries = Object.values(this.dirty).map(d => ({ Order_ID:d.Order_ID, Quantity:d.Received_Today||0, Remarks:d.Remarks||'' }));
+    if(!entries.length){ MES.Components.Toast.show({ type:'warning', message:'No changes to save' }); return; }
+    MES.Core.Api.call('saveFabricEntries', { rows:entries, date:this.date }).then(() => {
+      MES.Components.Toast.show({ type:'success', message: entries.length + ' fabric entries saved' });
+      this.dirty = {};
+      document.getElementById('fabUnsaved').classList.add('hidden');
+      if(lockAfter) return MES.Core.Api.call('lockFabricDate', { date:this.date }).then(()=>MES.Components.Toast.show({type:'success',message:'Date locked'}));
+    }).then(() => this.load());
+  }
+};
+
+/* =====================================================================================
+   SECTION: MODULE — QUALITY TRACKER (daily inline-editable grid)
+===================================================================================== */
+MES.Modules.qualityTracker = {
+  init(container){
+    this.container = container; this.date = MES.Core.Utils.todayStr(); this.dirty = {};
+    this.canEdit = MES.Core.Auth.hasPermission('qualityTracker','write');
+    this.render();
+  },
+  render(){
+    this.container.innerHTML = `
+      <div class="filter-bar">
+        <div class="filter-field"><label>Entry Date</label><input type="date" id="qcDate" value="${this.date}"></div>
+        <div style="flex:1"></div>
+        <span class="unsaved-indicator hidden" id="qcUnsaved"></span>
+        ${this.canEdit ? `<button class="btn btn-secondary" id="qcLockBtn">Save &amp; Lock Today</button><button class="btn btn-primary" id="qcSaveBtn">Save All Entries</button>` : ''}
+      </div>
+      <div id="qcStrip"></div>
+      <div class="panel"><div class="panel-header">Daily Inspection Entry</div><div class="panel-body" id="qcTableBody"></div></div>`;
+    document.getElementById('qcDate').onchange = (e) => { this.date = e.target.value; this.dirty={}; this.load(); };
+    if(this.canEdit){
+      document.getElementById('qcSaveBtn').onclick = () => this.save(false);
+      document.getElementById('qcLockBtn').onclick = () => this.save(true);
+    }
+    this.load();
+  },
+  load(){
+    MES.Core.Api.call('getQualityEntryGrid', { date:this.date }).then(r => { this.rows = r.data; this.renderStrip(); this.renderTable(); });
+  },
+  renderStrip(){
+    const U = MES.Core.Utils;
+    const checked = this.rows.reduce((s,r)=>s+Number(r.Checked_Today||0),0);
+    const reject = this.rows.reduce((s,r)=>s+Number(r.Reject_Today||0),0);
+    const dhuCount = this.rows.reduce((s,r)=>s+Number(r.DHU_Count||0),0);
+    const passQty = this.rows.reduce((s,r)=>s+Number(r.Pass_Qty||0),0);
+    const atRisk = this.rows.filter(r=>r.Reject_Pct>5 || (r.DHU_Trend&&r.DHU_Trend.direction==='worsening')).length;
+    document.getElementById('qcStrip').innerHTML = MES.Components.StatCards.renderMiniStrip([
+      { label:'Checked Today', value:U.fmtNum(checked) },
+      { label:'Reject Today', value:U.fmtNum(reject) },
+      { label:'Overall DHU', value: checked? U.fmtPct(Math.round((dhuCount/checked)*10000)/100) : '0%' },
+      { label:'Overall Pass %', value: checked? U.fmtPct(Math.round((passQty/checked)*10000)/100) : '0%' },
+      { label:'Orders At Risk', value:U.fmtNum(atRisk) }
+    ]);
+  },
+  renderTable(){
+    const U = MES.Core.Utils;
+    const columns = [
+      { key:'Buyer', label:'Buyer' }, { key:'Style', label:'Style' },
+      { key:'Order_Qty', label:'Order Qty', format:r=>U.fmtNum(r.Order_Qty) },
+      { key:'Checked_Today', label:'Checked Today', editable:this.canEdit, type:'number' },
+      { key:'Reject_Today', label:'Reject Today', editable:this.canEdit, type:'number' },
+      { key:'Rework_Today', label:'Rework Today', editable:this.canEdit, type:'number' },
+      { key:'DHU_Count', label:'DHU (count)', editable:this.canEdit, type:'number' },
+      { key:'Final_Inspection', label:'Final Inspection', editable:this.canEdit, type:'number' },
+      { key:'Pass_Qty', label:'Pass Qty', editable:this.canEdit, type:'number' },
+      { key:'Total_Reject', label:'Total Reject', format:r=>U.fmtNum(r.Total_Reject) },
+      { key:'Reject_Pct', label:'Reject %', format:r=>`<span class="${U.ragClass(r.Reject_Pct<=2?'green':(r.Reject_Pct<=5?'amber':'red'))}">${U.fmtPct(r.Reject_Pct)}</span>` },
+      { key:'DHU_Trend', label:'DHU Trend', format:r=>{
+          const t = r.DHU_Trend||{direction:'flat',delta:0};
+          const sym = t.direction==='worsening'?'▲':(t.direction==='improving'?'▼':'—');
+          const cls = t.direction==='worsening'?'red':(t.direction==='improving'?'green':'gray');
+          return `<span class="${U.ragClass(cls)}">${sym} ${Math.abs(t.delta)}%</span>`;
+        }},
+      { key:'Inspection_Pct', label:'Inspection %', format:r=>U.fmtPct(r.Inspection_Pct) },
+      { key:'Pass_Pct', label:'Pass %', format:r=>{
+          const rag = r.Pass_Pct>=97?'green':(r.Pass_Pct>=92?'amber':'red');
+          return `<span class="${U.ragClass(rag)}">${U.fmtPct(r.Pass_Pct)}</span>`; }},
+      { key:'Remarks', label:'Remarks', editable:this.canEdit, type:'text' }
+    ];
+    const el = document.getElementById('qcTableBody');
+    el.innerHTML = MES.Components.Table.render({ columns, rows:this.rows, idField:'Order_ID', emptyMessage:'No open orders' });
+    MES.Components.Table.bind(el, { onCellInput:(rowId,key,value)=>this.onEdit(rowId,key,value) });
+  },
+  onEdit(rowId, key, value){
+    const row = this.rows.find(r=>r.Order_ID===rowId);
+    row[key] = key==='Remarks' ? value : Number(value||0);
+    row.__dirty = true;
+    if(!this.dirty[rowId]) this.dirty[rowId] = {};
+    this.dirty[rowId][key] = row[key];
+    this.dirty[rowId].Order_ID = rowId;
+    document.getElementById('qcUnsaved').classList.remove('hidden');
+    document.getElementById('qcUnsaved').textContent = Object.keys(this.dirty).length + ' unsaved row(s)';
+    const checked = Number(row.Checked_Today||0), reject = Number(row.Reject_Today||0), pass = Number(row.Pass_Qty||0), dhuC = Number(row.DHU_Count||0);
+    row.Reject_Pct = checked ? Math.round((reject/checked)*10000)/100 : 0;
+    row.Pass_Pct = checked ? Math.round((pass/checked)*10000)/100 : 0;
+    row.Inspection_Pct = row.Order_Qty ? Math.round((checked/row.Order_Qty)*10000)/100 : 0;
+    MES.Components.Table.patchCell(rowId, 'Reject_Pct', `<span class="${MES.Core.Utils.ragClass(row.Reject_Pct<=2?'green':(row.Reject_Pct<=5?'amber':'red'))}">${MES.Core.Utils.fmtPct(row.Reject_Pct)}</span>`);
+    MES.Components.Table.patchCell(rowId, 'Pass_Pct', `<span class="${MES.Core.Utils.ragClass(row.Pass_Pct>=97?'green':(row.Pass_Pct>=92?'amber':'red'))}">${MES.Core.Utils.fmtPct(row.Pass_Pct)}</span>`);
+    MES.Components.Table.patchCell(rowId, 'Inspection_Pct', MES.Core.Utils.fmtPct(row.Inspection_Pct));
+  },
+  save(lockAfter){
+    const entries = Object.values(this.dirty).map(d => ({
+      Order_ID:d.Order_ID, Checked_Qty:d.Checked_Today||0, Rejected_Qty:d.Reject_Today||0, Rework_Qty:d.Rework_Today||0,
+      Defect_Count:d.DHU_Count||0, Final_Inspection_Qty:d.Final_Inspection||0, Passed_Qty:d.Pass_Qty||0, Remarks:d.Remarks||''
+    }));
+    if(!entries.length){ MES.Components.Toast.show({ type:'warning', message:'No changes to save' }); return; }
+    MES.Core.Api.call('saveQualityEntries', { rows:entries, date:this.date }).then(() => {
+      MES.Components.Toast.show({ type:'success', message: entries.length + ' quality entries saved' });
+      this.dirty = {};
+      document.getElementById('qcUnsaved').classList.add('hidden');
+      if(lockAfter) return MES.Core.Api.call('lockQualityDate', { date:this.date }).then(()=>MES.Components.Toast.show({type:'success',message:'Date locked'}));
+    }).then(() => this.load());
+  }
+};
+
+/* =====================================================================================
+   SECTION: MODULE — PLANNING (daily inline-editable grid, 3 fields only)
+===================================================================================== */
+MES.Modules.planning = {
+  init(container){
+    this.container = container; this.date = MES.Core.Utils.todayStr(); this.dirty = {};
+    this.canEdit = MES.Core.Auth.hasPermission('planning','write');
+    this.render();
+  },
+  render(){
+    this.container.innerHTML = `
+      <div class="filter-bar">
+        <div class="filter-field"><label>Plan Date</label><input type="date" id="planDate" value="${this.date}"></div>
+        <div style="flex:1"></div>
+        <span class="unsaved-indicator hidden" id="planUnsaved"></span>
+        ${this.canEdit ? `<button class="btn btn-secondary" id="planLockBtn">Save &amp; Lock Today</button><button class="btn btn-primary" id="planSaveBtn">Save All Plans</button>` : ''}
+      </div>
+      <div id="planStrip"></div>
+      <div class="panel"><div class="panel-header">Daily Production Planning</div><div class="panel-body" id="planTableBody"></div></div>`;
+    document.getElementById('planDate').onchange = (e) => { this.date = e.target.value; this.dirty={}; this.load(); };
+    if(this.canEdit){
+      document.getElementById('planSaveBtn').onclick = () => this.save(false);
+      document.getElementById('planLockBtn').onclick = () => this.save(true);
+    }
+    this.load();
+  },
+  load(){
+    MES.Core.Api.call('getPlanningEntryGrid', { date:this.date }).then(r => { this.rows = r.data; this.renderStrip(); this.renderTable(); });
+  },
+  renderStrip(){
+    const U = MES.Core.Utils;
+    const plan = this.rows.reduce((s,r)=>s+Number(r.Plan_Today||0),0);
+    const actual = this.rows.reduce((s,r)=>s+Number(r.Actual_Today||0),0);
+    const atRisk = this.rows.filter(r=>r.Risk==='red'||r.Risk==='amber').length;
+    const delayed = this.rows.filter(r=>r.Delay_Days>0).length;
+    document.getElementById('planStrip').innerHTML = MES.Components.StatCards.renderMiniStrip([
+      { label:'Total Plan Today', value:U.fmtNum(plan) },
+      { label:'Total Actual Today', value:U.fmtNum(actual) },
+      { label:'Overall Achievement', value: plan? U.fmtPct(Math.round((actual/plan)*10000)/100) : '–' },
+      { label:'Orders At Risk', value:U.fmtNum(atRisk) },
+      { label:'Orders Delayed', value:U.fmtNum(delayed) }
+    ]);
+  },
+  renderTable(){
+    const U = MES.Core.Utils;
+    const columns = [
+      { key:'Buyer', label:'Buyer' }, { key:'Style', label:'Style' }, { key:'Line_Assigned', label:'Line' },
+      { key:'Order_Qty', label:'Order Qty', format:r=>U.fmtNum(r.Order_Qty) },
+      { key:'Plan_Today', label:'Plan Today', editable:this.canEdit, type:'number' },
+      { key:'Actual_Today', label:'Actual Today', format:r=>U.fmtNum(r.Actual_Today) },
+      { key:'Achievement_Pct', label:'Achievement', format:r=>r.Achievement_Pct===null?'–':`<span class="${U.ragClass(r.Achievement_Rag)}">${U.fmtPct(r.Achievement_Pct)}</span>` },
+      { key:'Balance_Qty', label:'Balance', format:r=>U.fmtNum(r.Balance_Qty) },
+      { key:'Required_Per_Day', label:'Req/Day', format:r=>U.fmtNum(r.Required_Per_Day) },
+      { key:'Days_Remaining', label:'Days Left', format:r=>U.fmtNum(r.Days_Remaining) },
+      { key:'Expected_Finish', label:'Exp Finish', format:r=>U.fmtDate(r.Expected_Finish) },
+      { key:'Delay_Days', label:'Delay Days', format:r=>`<span class="${r.Delay_Days>0?'rag-text red':'rag-text green'}">${U.fmtNum(r.Delay_Days)}</span>` },
+      { key:'Risk', label:'Risk', format:r=>U.pillHtml(r.Risk, r.Risk?r.Risk.toUpperCase():'—') },
+      { key:'Status', label:'Status' },
+      { key:'Priority', label:'Priority', editable:this.canEdit, type:'select', options:['Low','Medium','High','Critical'] },
+      { key:'Remarks', label:'Remarks', editable:this.canEdit, type:'text' }
+    ];
+    const el = document.getElementById('planTableBody');
+    el.innerHTML = MES.Components.Table.render({ columns, rows:this.rows, idField:'Order_ID', emptyMessage:'No open orders' });
+    MES.Components.Table.bind(el, { onCellInput:(rowId,key,value)=>this.onEdit(rowId,key,value) });
+  },
+  onEdit(rowId, key, value){
+    const row = this.rows.find(r=>r.Order_ID===rowId);
+    row[key] = key==='Plan_Today' ? Number(value||0) : value;
+    row.__dirty = true;
+    if(!this.dirty[rowId]) this.dirty[rowId] = {};
+    this.dirty[rowId][key] = row[key];
+    this.dirty[rowId].Order_ID = rowId;
+    document.getElementById('planUnsaved').classList.remove('hidden');
+    document.getElementById('planUnsaved').textContent = Object.keys(this.dirty).length + ' unsaved row(s)';
+    if(key==='Plan_Today'){
+      const ach = row.Plan_Today ? Math.round((Number(row.Actual_Today||0)/row.Plan_Today)*10000)/100 : null;
+      row.Achievement_Pct = ach; row.Achievement_Rag = ach===null?'gray':(ach>=95?'green':(ach>=80?'amber':'red'));
+      MES.Components.Table.patchCell(rowId, 'Achievement_Pct', ach===null?'–':`<span class="${MES.Core.Utils.ragClass(row.Achievement_Rag)}">${MES.Core.Utils.fmtPct(ach)}</span>`);
+    }
+  },
+  save(lockAfter){
+    const entries = Object.values(this.dirty).map(d => ({ Order_ID:d.Order_ID, Planned_Qty:d.Plan_Today||0, Priority:d.Priority||'Medium', Remarks:d.Remarks||'' }));
+    if(!entries.length){ MES.Components.Toast.show({ type:'warning', message:'No changes to save' }); return; }
+    MES.Core.Api.call('savePlanningEntries', { rows:entries, date:this.date }).then(() => {
+      MES.Components.Toast.show({ type:'success', message: entries.length + ' planning entries saved' });
+      this.dirty = {};
+      document.getElementById('planUnsaved').classList.add('hidden');
+      if(lockAfter) return MES.Core.Api.call('lockPlanningDate', { date:this.date }).then(()=>MES.Components.Toast.show({type:'success',message:'Date locked'}));
+    }).then(() => this.load());
+  }
+};
+
+/* =====================================================================================
+   SECTION: MODULE — PRODUCTION TRACKER (modal-based daily update per stage)
+===================================================================================== */
+MES.Modules.productionTracker = {
+  STAGES: ['Cutting','Sewing','Checking','Packing','Shipped'],
+  init(container){
+    this.container = container; this.page = 1; this.filters = {};
+    this.canEdit = MES.Core.Auth.hasPermission('productionTracker','write');
+    this.render();
+  },
+  render(){
+    this.container.innerHTML = `
+      ${MES.Components.FilterBar.render([
+        { key:'search', label:'Search', type:'search', placeholder:'Order / Style / Buyer' }
+      ])}
+      <div class="panel"><div class="panel-header">Production Status by Order</div><div class="panel-body" id="prodTableBody"></div></div>`;
+    MES.Components.FilterBar.bind(this.container, f => { this.filters = f; this.page = 1; this.load(); });
+    this.load();
+  },
+  load(){
+    MES.Core.Api.call('getProductionList', Object.assign({ page:this.page, pageSize:25 }, this.filters)).then(r => { this.rows = r.data; this.renderTable(r.meta); });
+  },
+  renderTable(meta){
+    const U = MES.Core.Utils;
+    const columns = [
+      { key:'Order_ID', label:'Order ID' }, { key:'Buyer_Name', label:'Buyer' }, { key:'Style_No', label:'Style' },
+      { key:'Line_Assigned', label:'Line' }, { key:'Order_Qty', label:'Order Qty', format:r=>U.fmtNum(r.Order_Qty) },
+      { key:'Cut_Total', label:'Cut', format:r=>U.fmtNum(r.Cut_Total) },
+      { key:'Sew_Total', label:'Sew', format:r=>U.fmtNum(r.Sew_Total) },
+      { key:'Check_Total', label:'Check', format:r=>U.fmtNum(r.Check_Total) },
+      { key:'Pack_Total', label:'Pack', format:r=>U.fmtNum(r.Pack_Total) },
+      { key:'Shipment_Total', label:'Shipped', format:r=>U.fmtNum(r.Shipment_Total) },
+      { key:'Balance', label:'Balance', format:r=>U.fmtNum(r.Balance) },
+      { key:'Achievement_Pct', label:'Achievement', format:r=>`<span class="${U.ragClass(r.Achievement_Rag)}">${U.fmtPct(r.Achievement_Pct)}</span>` },
+      { key:'Required_Per_Day', label:'Req/Day', format:r=>U.fmtNum(r.Required_Per_Day) },
+      { key:'Status', label:'Status' },
+      { key:'Risk', label:'Risk', format:r=>U.pillHtml(r.Risk, r.Risk?r.Risk.toUpperCase():'—') }
+    ];
+    const rowActions = this.canEdit ? [ { key:'update', icon:'✎', title:'Daily Update', onClick:(id)=>this.openDailyUpdate(id) } ] : null;
+    const el = document.getElementById('prodTableBody');
+    el.innerHTML = MES.Components.Table.render({ columns, rows:this.rows, idField:'Order_ID', rowActions, page:meta.page, pageSize:meta.pageSize, total:meta.total, emptyMessage:'No open orders' });
+    MES.Components.Table.bind(el, { rowActions, onPageChange:(p)=>{ this.page=p; this.load(); } });
+  },
+  openDailyUpdate(orderId){
+    MES.Core.Api.call('getProductionDetail', { orderId }).then(r => {
+      const { order, summary, stages } = r.data;
+      const U = MES.Core.Utils;
+      MES.Components.Modal.open({
+        title:'Daily Update — ' + order.Order_ID,
+        wide:true,
+        bodyHtml:`
+          <div class="du-summary">
+            <div class="item"><div class="lbl">Line</div><div class="val">${U.escape(order.Line_Assigned||'–')}</div></div>
+            <div class="item"><div class="lbl">Order Qty</div><div class="val">${U.fmtNum(order.Order_Qty)}</div></div>
+            <div class="item"><div class="lbl">Status</div><div class="val">${U.escape(summary.Status)}</div></div>
+            <div class="item"><div class="lbl">Balance</div><div class="val">${U.fmtNum(summary.Balance)}</div></div>
+            <div class="item"><div class="lbl">Achievement %</div><div class="val">${U.fmtPct(summary.Achievement_Pct)}</div></div>
+            <div class="item"><div class="lbl">Required/Day</div><div class="val">${U.fmtNum(summary.Required_Per_Day)}</div></div>
+          </div>
+          <table class="data-table"><thead><tr><th>Stage</th><th>Current Total</th><th>Remaining</th><th>+ Today's Qty</th></tr></thead>
+          <tbody>${stages.map(s => `
+            <tr><td>${s.stage}</td><td>${U.fmtNum(s.total)}</td><td>${U.fmtNum(s.remaining)}</td>
+            <td><input type="number" min="0" step="any" id="du_${s.stage}" style="width:100px;padding:6px 8px;border:1px solid var(--border-strong);border-radius:6px;"></td></tr>
+          `).join('')}</tbody></table>
+          <div class="form-group full mt-3"><label>Remarks</label><textarea id="du_Remarks"></textarea></div>`,
+        footerHtml:`<button class="btn btn-secondary" id="duCancelBtn">Cancel</button><button class="btn btn-primary" id="duSaveBtn">Save Daily Update</button>`
+      });
+      document.getElementById('duCancelBtn').onclick = () => MES.Components.Modal.close();
+      document.getElementById('duSaveBtn').onclick = () => this.saveDailyUpdate(orderId);
+    });
+  },
+  saveDailyUpdate(orderId){
+    const remarks = document.getElementById('du_Remarks').value;
+    const stageEntries = this.STAGES.map(stage => {
+      const el = document.getElementById('du_'+stage);
+      return { stage, qty: el.value ? Number(el.value) : 0, remarks };
+    }).filter(e => e.qty > 0 || e.remarks);
+    if(!stageEntries.length){ MES.Components.Toast.show({ type:'warning', message:'Enter at least one stage quantity' }); return; }
+    MES.Core.Api.call('dailyProductionUpdate', { orderId, stages:stageEntries, date: MES.Core.Utils.todayStr() }).then(() => {
+      MES.Components.Modal.close();
+      MES.Components.Toast.show({ type:'success', message:'Daily update recorded' });
+      this.load();
+    });
+  }
+};
+
+/* =====================================================================================
+   SECTION: MODULE — REPORTS (export center)
+===================================================================================== */
+MES.Modules.reports = {
+  MODULES: [
+    { key:'orderMaster', label:'Order Master' }, { key:'fabricDaily', label:'Fabric Daily Log' },
+    { key:'productionDaily', label:'Production Daily Log' }, { key:'qualityDaily', label:'Quality Daily Log' },
+    { key:'planningDaily', label:'Planning Daily Log' }, { key:'delayLog', label:'Delay Log' },
+    { key:'dashboardGrid', label:'Order Production Status (Dashboard)' }
+  ],
+  init(container){
+    this.container = container; this.selected = 'orderMaster';
+    this.render();
+  },
+  render(){
+    this.container.innerHTML = `
+      <div class="tabs" id="reportTabs">${this.MODULES.map(m => `<button class="tab-btn ${m.key===this.selected?'active':''}" data-mod="${m.key}">${m.label}</button>`).join('')}</div>
+      <div class="table-toolbar">
+        <div class="font-semibold">Report Preview</div>
+        <div class="flex gap-2">
+          <button class="btn btn-secondary" id="clientExportBtn">Download as Excel (Client)</button>
+          <button class="btn btn-primary" id="serverExportBtn">Generate Excel File (Server)</button>
+        </div>
+      </div>
+      <div class="panel"><div class="panel-body" id="reportTableBody"></div></div>`;
+    document.getElementById('reportTabs').querySelectorAll('.tab-btn').forEach(btn => {
+      btn.onclick = () => { this.selected = btn.dataset.mod; this.render(); };
+    });
+    document.getElementById('clientExportBtn').onclick = () => this.exportClient();
+    document.getElementById('serverExportBtn').onclick = () => this.exportServer();
+    this.load();
+  },
+  load(){
+    MES.Core.Api.call('getExportData', { module:this.selected }).then(r => { this.rows = r.data; this.renderTable(); });
+  },
+  renderTable(){
+    const el = document.getElementById('reportTableBody');
+    if(!this.rows.length){ el.innerHTML = '<div class="table-empty">No data available for this report</div>'; return; }
+    const columns = Object.keys(this.rows[0]).filter(k=>!k.startsWith('__')).map(k => ({ key:k, label:k.replace(/_/g,' ') }));
+    el.innerHTML = MES.Components.Table.render({ columns, rows:this.rows.slice(0,200), idField:columns[0].key, emptyMessage:'No data' });
+  },
+  exportClient(){
+    if(!this.rows || !this.rows.length){ MES.Components.Toast.show({ type:'warning', message:'No data to export' }); return; }
+    const ws = XLSX.utils.json_to_sheet(this.rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, this.selected.slice(0,30));
+    XLSX.writeFile(wb, 'MES_' + this.selected + '_' + MES.Core.Utils.todayStr() + '.xlsx');
+    MES.Components.Toast.show({ type:'success', message:'Excel file downloaded' });
+  },
+  exportServer(){
+    MES.Core.Api.call('generateServerExcel', { module:this.selected }).then(r => {
+      window.open(r.data.url, '_blank');
+      MES.Components.Toast.show({ type:'success', message:'Excel file generated in Drive' });
+    });
+  }
+};
+
+/* =====================================================================================
+   SECTION: MODULE — SETTINGS (master data management)
+===================================================================================== */
+MES.Modules.settings = {
+  CATEGORIES: ['Buyer','Line','FabricType','DefectCode','Role','Unit','ShiftType','DelayCategory','PrimaryOutputStage'],
+  init(container){
+    this.container = container; this.selected = 'Buyer';
+    this.canEdit = MES.Core.Auth.hasPermission('settings','write');
+    this.render();
+  },
+  render(){
+    this.container.innerHTML = `
+      <div class="tabs" id="settingsTabs">${this.CATEGORIES.map(c => `<button class="tab-btn ${c===this.selected?'active':''}" data-cat="${c}">${c}</button>`).join('')}</div>
+      <div class="panel">
+        <div class="table-toolbar">
+          <div class="font-semibold">${this.selected} Master Data</div>
+          ${this.canEdit ? '<button class="btn btn-primary" id="newSettingBtn">+ Add Entry</button>' : ''}
+        </div>
+        <div id="settingsTableBody"></div>
+      </div>`;
+    document.getElementById('settingsTabs').querySelectorAll('.tab-btn').forEach(btn => {
+      btn.onclick = () => { this.selected = btn.dataset.cat; this.render(); };
+    });
+    if(this.canEdit) document.getElementById('newSettingBtn').onclick = () => this.openForm(null);
+    this.load();
+  },
+  load(){
+    MES.Core.Api.call('getSettings', {}).then(r => { this.rows = (r.data[this.selected]||[]).map(x=>({ Setting_Key:x.key, Setting_Value:x.value, Setting_Value_2:x.value2, Sort_Order:x.sortOrder })); this.renderTable(); });
+  },
+  renderTable(){
+    const columns = [
+      { key:'Setting_Key', label:'Key' }, { key:'Setting_Value', label:'Value' },
+      { key:'Setting_Value_2', label:'Value 2' }, { key:'Sort_Order', label:'Sort Order' }
+    ];
+    const rowActions = this.canEdit ? [
+      { key:'edit', icon:'✎', title:'Edit', onClick:(key)=>this.openForm(this.rows.find(r=>r.Setting_Key===key)) },
+      { key:'del', icon:'✕', title:'Deactivate', danger:true, onClick:(key)=>this.deactivate(key) }
+    ] : null;
+    const el = document.getElementById('settingsTableBody');
+    el.innerHTML = MES.Components.Table.render({ columns, rows:this.rows, idField:'Setting_Key', rowActions, emptyMessage:'No entries in this category' });
+    MES.Components.Table.bind(el, { rowActions });
+  },
+  openForm(row){
+    const v = row || {};
+    MES.Components.Modal.open({
+      title: row ? 'Edit Setting' : 'Add ' + this.selected + ' Entry',
+      bodyHtml: `
+        <div class="form-grid">
+          <div class="form-group"><label>Key</label><input id="s_key" value="${MES.Core.Utils.escape(v.Setting_Key||'')}" ${row?'disabled':''}></div>
+          <div class="form-group"><label>Value</label><input id="s_value" value="${MES.Core.Utils.escape(v.Setting_Value||'')}"></div>
+          <div class="form-group"><label>Value 2 (optional)</label><input id="s_value2" value="${MES.Core.Utils.escape(v.Setting_Value_2||'')}"></div>
+          <div class="form-group"><label>Sort Order</label><input type="number" id="s_sort" value="${v.Sort_Order||0}"></div>
+        </div>`,
+      footerHtml:`<button class="btn btn-secondary" id="sCancelBtn">Cancel</button><button class="btn btn-primary" id="sSaveBtn">Save</button>`
+    });
+    document.getElementById('sCancelBtn').onclick = () => MES.Components.Modal.close();
+    document.getElementById('sSaveBtn').onclick = () => {
+      const payload = { Setting_Category:this.selected, Setting_Key:document.getElementById('s_key').value,
+        Setting_Value:document.getElementById('s_value').value, Setting_Value_2:document.getElementById('s_value2').value,
+        Sort_Order:Number(document.getElementById('s_sort').value||0) };
+      const action = row ? 'updateSetting' : 'createSetting';
+      const body = row ? { id: row.Setting_Key, updates: payload } : payload;
+      MES.Core.Api.call(action, body).then(() => {
+        MES.Components.Modal.close();
+        MES.Components.Toast.show({ type:'success', message:'Saved' });
+        this.load();
+      });
+    };
+  },
+  deactivate(key){
+    MES.Core.Api.call('deactivateSetting', { id:key }).then(() => {
+      MES.Components.Toast.show({ type:'success', message:'Entry deactivated' });
+      this.load();
+    });
+  }
+};
+
+/* =====================================================================================
+   SECTION: BOOTSTRAP
+===================================================================================== */
+MES.Core.bootApp = function(){
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('appShell').classList.add('active');
+  const u = MES.State.session.user;
+  document.getElementById('userAvatar').textContent = (u.fullName||u.username||'?').slice(0,2).toUpperCase();
+  document.getElementById('userName').textContent = u.fullName || u.username;
+  document.getElementById('userRole').textContent = u.role;
+  MES.Core.Router.renderNav();
+  MES.Core.Router.navigate('dashboard');
+};
+
+document.getElementById('loginBtn').onclick = () => MES.Core.Auth.login();
+document.getElementById('loginPassword').addEventListener('keydown', e => { if(e.key==='Enter') MES.Core.Auth.login(); });
+document.getElementById('logoutBtn').onclick = () => MES.Core.Auth.logout();
+document.getElementById('refreshBtn').onclick = () => { if(MES.State.currentModule && MES.State.currentModule.load) MES.State.currentModule.load(); else MES.Core.Router.navigate(document.querySelector('.nav-item.active')?.dataset.module || 'dashboard'); };
+document.getElementById('exportBtn').onclick = () => MES.Core.Router.navigate('reports');
+document.getElementById('sidebarCollapseBtn').onclick = () => document.getElementById('sidebar').classList.toggle('collapsed');
+document.getElementById('mobileNavToggle').addEventListener('click', () => document.getElementById('sidebar').classList.toggle('mobile-open'));
+
+window.addEventListener('resize', () => {
+  document.getElementById('mobileNavToggle').style.display = window.innerWidth <= 900 ? 'flex' : 'none';
+});
+window.dispatchEvent(new Event('resize'));
+
+MES.Core.Auth.init();
+</script>
+
+</body>
+</html>
